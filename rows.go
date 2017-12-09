@@ -2,7 +2,6 @@ package athena
 
 import (
 	"database/sql/driver"
-	"fmt"
 	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -90,7 +89,6 @@ func (r *rows) fetchNextPage(token *string) (bool, error) {
 		return false, err
 	}
 
-	fmt.Println(r.out.ResultSet.String())
 	// First row of an Athena response contains headers.
 	// These are also available in *athena.Row.ResultSetMetadata.
 	if len(r.out.ResultSet.Rows) < 2 {
