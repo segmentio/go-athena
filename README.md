@@ -4,7 +4,10 @@
 go-athena is a simple Golang [database/sql] driver for [Amazon Athena](https://aws.amazon.com/athena/).
 
 ```go
-import "database/sql"
+import (
+    "database/sql"
+    _ "github.com/segmentio/go-athena"
+)
 
 func main() {
   db, _ := sql.Open("athena", "db=default&output_location=s3://results")
