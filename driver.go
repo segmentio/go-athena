@@ -97,6 +97,7 @@ func Open(cfg Config) (*sql.DB, error) {
 	return sql.Open(name, "")
 }
 
+// Config is the input to Open().
 type Config struct {
 	Session        *session.Session
 	Database       string
