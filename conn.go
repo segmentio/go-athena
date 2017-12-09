@@ -110,7 +110,6 @@ func (c *conn) Begin() (driver.Tx, error) {
 	panic("Athena doesn't support transactions")
 }
 
-// Close is noop.
 func (c *conn) Close() error {
 	return nil
 }
