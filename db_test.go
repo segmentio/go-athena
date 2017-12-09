@@ -188,7 +188,7 @@ func (t athenaTimestamp) MarshalJSON() ([]byte, error) {
 }
 
 func (t athenaTimestamp) String() string {
-	return time.Time(t).Format(TimestampFormat)
+	return time.Time(t).Format(TimestampLayout)
 }
 
 func (t athenaTimestamp) Equal(t2 athenaTimestamp) bool {

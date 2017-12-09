@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	// TimestampFormat is the Go time layout string for an Athena `timestamp`.
-	TimestampFormat = "2006-01-02 03:04:05.999"
+	// TimestampLayout is the Go time layout string for an Athena `timestamp`.
+	TimestampLayout = "2006-01-02 03:04:05.999"
 )
 
 func convertRow(columns []*athena.ColumnInfo, in []*athena.Datum, ret []driver.Value) error {
@@ -53,7 +53,7 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 	case "varchar", "string":
 		return val, nil
 	case "timestamp":
-		return time.Parse(TimestampFormat, val)
+		return time.Parse(TimestampLayout, val)
 	default:
 		panic(fmt.Errorf("unknown type `%s` with value %s", athenaType, val))
 	}
