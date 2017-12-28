@@ -46,12 +46,12 @@ func (r *rows) Columns() []string {
 	return columns
 }
 
-func (r *rows) ColumnTypeDatabaseTypeName(index int) (typeName string) {
+func (r *rows) ColumnTypeDatabaseTypeName(index int) string {
 	colInfo := r.out.ResultSet.ResultSetMetadata.ColumnInfo[index]
 	if colInfo.Type != nil {
-		typeName = *colInfo.Type
+		return *colInfo.Type
 	}
-	return
+	return ""
 }
 
 func (r *rows) Next(dest []driver.Value) error {
