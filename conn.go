@@ -74,7 +74,7 @@ func (c *conn) startQuery(query string) (string, error) {
 // waitOnQuery blocks until a query finishes, returning an error if it failed.
 func (c *conn) waitOnQuery(ctx context.Context, queryID string) error {
 	for {
-		statusResp, err := c.athena.GetQueryExecution(&athena.GetQueryExecutionInput{
+		statusResp, err := c.athena.GetQueryExecutionWithContext(ctx, &athena.GetQueryExecutionInput{
 			QueryExecutionId: aws.String(queryID),
 		})
 		if err != nil {
@@ -98,7 +98,14 @@ func (c *conn) waitOnQuery(ctx context.Context, queryID string) error {
 			return context.DeadlineExceeded
 		}
 
-		time.Sleep(c.pollFrequency)
+		select {
+		case <-ctx.Done():
+			c.athena.StopQueryExecution(&athena.StopQueryExecutionInput{
+				QueryExecutionId: aws.String(queryID),
+			})
+		case <-time.After(c.pollFrequency):
+			continue
+		}
 	}
 }
 
