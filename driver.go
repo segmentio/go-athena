@@ -23,6 +23,11 @@ type Driver struct {
 	cfg *Config
 }
 
+// NewDriver allows you to register your own driver with `sql.Register`.
+// It's useful for more complex use cases. Read more in PR #3.
+// https://github.com/segmentio/go-athena/pull/3
+//
+// Generally, sql.Open() or athena.Open() should suffice.
 func NewDriver(cfg *Config) *Driver {
 	return &Driver{cfg}
 }
