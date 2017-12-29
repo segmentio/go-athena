@@ -58,6 +58,7 @@ func TestQuery(t *testing.T) {
 			TimestampType: athenaTimestamp(time.Date(2017, 12, 3, 1, 11, 12, 0, time.UTC)),
 		},
 	}
+	expectedTypeNames := []string{"varchar", "smallint", "integer", "bigint", "boolean", "double", "varchar", "timestamp"}
 	harness.uploadData(expected)
 
 	rows := harness.mustQuery("select * from %s", harness.table)
@@ -79,6 +80,13 @@ func TestQuery(t *testing.T) {
 		))
 
 		assert.Equal(t, expected[index], row, fmt.Sprintf("index: %d", index))
+
+		types, err := rows.ColumnTypes()
+		assert.NoError(t, err, fmt.Sprintf("index: %d", index))
+		for i, colType := range types {
+			typeName := colType.DatabaseTypeName()
+			assert.Equal(t, expectedTypeNames[i], typeName, fmt.Sprintf("index: %d", index))
+		}
 	}
 
 	require.NoError(t, rows.Err(), "rows.Err()")
