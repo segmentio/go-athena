@@ -23,6 +23,10 @@ type Driver struct {
 	cfg *Config
 }
 
+func NewDriver(cfg *Config) *Driver {
+	return &Driver{cfg}
+}
+
 func init() {
 	var drv driver.Driver = &Driver{}
 	sql.Register("athena", drv)
