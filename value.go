@@ -11,7 +11,7 @@ import (
 
 const (
 	// TimestampLayout is the Go time layout string for an Athena `timestamp`.
-	TimestampLayout = "2006-01-02 03:04:05.999"
+	TimestampLayout = "2006-01-02 15:04:05.999"
 )
 
 func convertRow(columns []*athena.ColumnInfo, in []*athena.Datum, ret []driver.Value) error {
