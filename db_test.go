@@ -57,6 +57,15 @@ func TestQuery(t *testing.T) {
 			StringType:    "another string",
 			TimestampType: athenaTimestamp(time.Date(2017, 12, 3, 1, 11, 12, 0, time.UTC)),
 		},
+		{
+			SmallintType:  9,
+			IntType:       8,
+			BigintType:    0,
+			BooleanType:   false,
+			DoubleType:    1.235,
+			StringType:    "another string",
+			TimestampType: athenaTimestamp(time.Date(2017, 12, 3, 20, 11, 12, 0, time.UTC)),
+		},
 	}
 	expectedTypeNames := []string{"varchar", "smallint", "integer", "bigint", "boolean", "double", "varchar", "timestamp"}
 	harness.uploadData(expected)
