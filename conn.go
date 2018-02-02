@@ -93,16 +93,13 @@ func (c *conn) waitOnQuery(ctx context.Context, queryID string) error {
 		case athena.QueryExecutionStateRunning:
 		}
 
-		deadline, ok := ctx.Deadline()
-		if ok && time.Now().After(deadline) {
-			return context.DeadlineExceeded
-		}
-
 		select {
 		case <-ctx.Done():
 			c.athena.StopQueryExecution(&athena.StopQueryExecutionInput{
 				QueryExecutionId: aws.String(queryID),
 			})
+
+			return ctx.Err()
 		case <-time.After(c.pollFrequency):
 			continue
 		}
