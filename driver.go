@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/athena"
 )
@@ -123,7 +124,11 @@ func configFromConnectionString(connStr string) (*Config, error) {
 
 	var cfg Config
 
-	cfg.Session, err = session.NewSession()
+	var acfg []*aws.Config
+	if region := args.Get("region"); region != "" {
+		acfg = append(acfg, &aws.Config{Region: aws.String(region)})
+	}
+	cfg.Session, err = session.NewSession(acfg...)
 	if err != nil {
 		return nil, err
 	}
