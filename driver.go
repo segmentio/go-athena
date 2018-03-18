@@ -55,6 +55,9 @@ func init() {
 // which the driver will poll for results. It should be a time/Duration.String().
 // A completely arbitrary default of "5s" was chosen.
 //
+// - `region` (optional)
+// Override AWS region. Useful if it is not set with environment variable.
+//
 // Credentials must be accessible via the SDK's Default Credential Provider Chain.
 // For more advanced AWS credentials/session/config management, please supply
 // a custom AWS session directly via `athena.Open()`.
