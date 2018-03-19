@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/athena"
 )
@@ -53,6 +54,9 @@ func init() {
 // Athena's API requires polling to retrieve query results. This is the frequency at
 // which the driver will poll for results. It should be a time/Duration.String().
 // A completely arbitrary default of "5s" was chosen.
+//
+// - `region` (optional)
+// Override AWS region. Useful if it is not set with environment variable.
 //
 // Credentials must be accessible via the SDK's Default Credential Provider Chain.
 // For more advanced AWS credentials/session/config management, please supply
@@ -123,7 +127,11 @@ func configFromConnectionString(connStr string) (*Config, error) {
 
 	var cfg Config
 
-	cfg.Session, err = session.NewSession()
+	var acfg []*aws.Config
+	if region := args.Get("region"); region != "" {
+		acfg = append(acfg, &aws.Config{Region: aws.String(region)})
+	}
+	cfg.Session, err = session.NewSession(acfg...)
 	if err != nil {
 		return nil, err
 	}
