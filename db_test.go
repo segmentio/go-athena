@@ -44,6 +44,7 @@ func TestQuery(t *testing.T) {
 			IntType:       2,
 			BigintType:    3,
 			BooleanType:   true,
+			FloatType:     3.14159,
 			DoubleType:    1.32112345,
 			StringType:    "some string",
 			TimestampType: athenaTimestamp(time.Date(2006, 1, 2, 3, 4, 11, 0, time.UTC)),
@@ -53,6 +54,7 @@ func TestQuery(t *testing.T) {
 			IntType:       8,
 			BigintType:    0,
 			BooleanType:   false,
+			FloatType:     3.14159,
 			DoubleType:    1.235,
 			StringType:    "another string",
 			TimestampType: athenaTimestamp(time.Date(2017, 12, 3, 1, 11, 12, 0, time.UTC)),
@@ -63,11 +65,12 @@ func TestQuery(t *testing.T) {
 			BigintType:    0,
 			BooleanType:   false,
 			DoubleType:    1.235,
+			FloatType:     3.14159,
 			StringType:    "another string",
 			TimestampType: athenaTimestamp(time.Date(2017, 12, 3, 20, 11, 12, 0, time.UTC)),
 		},
 	}
-	expectedTypeNames := []string{"varchar", "smallint", "integer", "bigint", "boolean", "double", "varchar", "timestamp"}
+	expectedTypeNames := []string{"varchar", "smallint", "integer", "bigint", "boolean", "float", "double", "varchar", "timestamp"}
 	harness.uploadData(expected)
 
 	rows := harness.mustQuery("select * from %s", harness.table)
@@ -83,6 +86,7 @@ func TestQuery(t *testing.T) {
 			&row.IntType,
 			&row.BigintType,
 			&row.BooleanType,
+			&row.FloatType,
 			&row.DoubleType,
 			&row.StringType,
 			&row.TimestampType,
@@ -120,6 +124,7 @@ type dummyRow struct {
 	IntType       int             `json:"intType"`
 	BigintType    int             `json:"bigintType"`
 	BooleanType   bool            `json:"booleanType"`
+	FloatType     float32         `json:"floatType"`
 	DoubleType    float64         `json:"doubleType"`
 	StringType    string          `json:"stringType"`
 	TimestampType athenaTimestamp `json:"timestampType"`
@@ -147,13 +152,15 @@ func setup(t *testing.T) *athenaHarness {
 
 func (a *athenaHarness) setupTable() {
 	// tables cannot start with numbers or contain dashes
-	a.table = "t_" + strings.Replace(uuid.NewV4().String(), "-", "_", -1)
+	id, _ := uuid.NewV4()
+	a.table = "t_" + strings.Replace(id.String(), "-", "_", -1)
 	a.mustExec(`CREATE EXTERNAL TABLE %[1]s (
 	nullValue string,
 	smallintType smallint,
 	intType int,
 	bigintType bigint,
 	booleanType boolean,
+	floatType float,
 	doubleType double,
 	stringType string,
 	timestampType timestamp
