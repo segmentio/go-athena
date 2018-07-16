@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"errors"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -47,9 +48,12 @@ func (c *conn) runQuery(ctx context.Context, query string) (driver.Rows, error) 
 		return nil, err
 	}
 
+	skipHeaders := !isDDL(query)
+
 	return newRows(rowsConfig{
-		Athena:  c.athena,
-		QueryID: queryID,
+		Athena:      c.athena,
+		QueryID:     queryID,
+		SkipHeaders: skipHeaders,
 	})
 }
 
@@ -134,3 +138,9 @@ func (c *conn) Exec(query string, args []driver.Value) (driver.Result, error) {
 
 var _ driver.Queryer = (*conn)(nil)
 var _ driver.Execer = (*conn)(nil)
+
+var ddlQueryRegex = regexp.MustCompile(`^(ALTER|CREATE|DESCRIBE|DROP|MSCK|SHOW)`)
+
+func isDDL(query string) bool {
+	return ddlQueryRegex.Match([]byte(query))
+}
