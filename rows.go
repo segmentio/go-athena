@@ -10,22 +10,24 @@ import (
 )
 
 type rows struct {
-	athena  athenaiface.AthenaAPI
-	queryID string
-
-	done bool
-	out  *athena.GetQueryResultsOutput
+	athena      athenaiface.AthenaAPI
+	queryID     string
+	skipHeaders bool
+	done        bool
+	out         *athena.GetQueryResultsOutput
 }
 
 type rowsConfig struct {
-	Athena  athenaiface.AthenaAPI
-	QueryID string
+	Athena      athenaiface.AthenaAPI
+	QueryID     string
+	SkipHeaders bool
 }
 
 func newRows(cfg rowsConfig) (*rows, error) {
 	r := rows{
-		athena:  cfg.Athena,
-		queryID: cfg.QueryID,
+		athena:      cfg.Athena,
+		queryID:     cfg.QueryID,
+		skipHeaders: cfg.SkipHeaders,
 	}
 
 	shouldContinue, err := r.fetchNextPage(nil)
@@ -97,13 +99,18 @@ func (r *rows) fetchNextPage(token *string) (bool, error) {
 		return false, err
 	}
 
-	// First row of an Athena response contains headers.
+	// First row of an Athena response (except of DDL queries) contains headers.
 	// These are also available in *athena.Row.ResultSetMetadata.
-	if len(r.out.ResultSet.Rows) < 2 {
+	minRows := 2
+	if !r.skipHeaders {
+		minRows = 1
+	}
+
+	if len(r.out.ResultSet.Rows) < minRows {
 		return false, nil
 	}
 
-	r.out.ResultSet.Rows = r.out.ResultSet.Rows[1:]
+	r.out.ResultSet.Rows = r.out.ResultSet.Rows[(minRows - 1):]
 	return true, nil
 }
 
