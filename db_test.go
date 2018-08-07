@@ -103,7 +103,7 @@ func TestQuery(t *testing.T) {
 	}
 
 	require.NoError(t, rows.Err(), "rows.Err()")
-	require.Equal(t, 2, index+1, "row count")
+	require.Equal(t, 3, index+1, "row count")
 }
 
 func TestOpen(t *testing.T) {

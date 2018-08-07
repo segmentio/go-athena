@@ -2,6 +2,7 @@ package athena
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -35,10 +36,13 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 	val := *rawValue
 	switch athenaType {
 	case "smallint":
+		// TODO: handle errors gracefully
 		return strconv.ParseInt(val, 10, 16)
 	case "integer":
+		// TODO: handle errors gracefully
 		return strconv.ParseInt(val, 10, 32)
 	case "bigint":
+		// TODO: handle errors gracefully
 		return strconv.ParseInt(val, 10, 64)
 	case "boolean":
 		switch val {
@@ -49,13 +53,22 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 		}
 		return nil, fmt.Errorf("cannot parse '%s' as boolean", val)
 	case "float":
+		// TODO: handle NaN, Infinity and errors gracefully
 		return strconv.ParseFloat(val, 32)
 	case "double":
+		// TODO: handle NaN, Infinity and errors gracefully
 		return strconv.ParseFloat(val, 64)
 	case "varchar", "string":
 		return val, nil
 	case "timestamp":
+		// TODO: handle errors gracefully
 		return time.Parse(TimestampLayout, val)
+	case "array", "map", "row": // gracefully handle these complex types as strings
+		return val, nil
+	case "json":
+		var v interface{}
+		err := json.Unmarshal([]byte(val), &v)
+		return v, err
 	default:
 		panic(fmt.Errorf("unknown type `%s` with value %s", athenaType, val))
 	}

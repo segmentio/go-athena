@@ -66,6 +66,19 @@ func TestConvertValue(t *testing.T) {
 		{"timestamp", pointer.String(""), nil, true},
 		{"timestamp", pointer.String("2018-08-07 11:55:00.000"), time.Date(2018, time.August, 7, 11, 55, 0, 0, time.UTC), false},
 		{"timestamp", pointer.String("invalid"), nil, true},
+
+		{"array", nil, nil, false},
+		{"array", pointer.String(""), "", false},
+		{"array", pointer.String("[a, b, c]"), "[a, b, c]", false},
+
+		{"map", nil, nil, false},
+		{"map", pointer.String(""), "", false},
+		{"map", pointer.String("{hello=world}"), "{hello=world}", false},
+
+		{"json", nil, nil, false},
+		{"json", pointer.String(""), nil, true},
+		{"json", pointer.String(`{"hello":"world"}`), map[string]interface{}{"hello": "world"}, false},
+		{"json", pointer.String("null"), nil, false},
 	}
 
 	for _, test := range spec {
