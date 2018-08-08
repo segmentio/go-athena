@@ -13,6 +13,8 @@ import (
 const (
 	// TimestampLayout is the Go time layout string for an Athena `timestamp`.
 	TimestampLayout = "2006-01-02 15:04:05.999"
+	// TimestampLayout is the Go time layout string for an Athena `timestamp with time zone`.
+	TimestampWithTimezoneLayout = "2006-01-02 15:04:05.999 UTC"
 )
 
 func convertRow(columns []*athena.ColumnInfo, in []*athena.Datum, ret []driver.Value) error {
@@ -63,6 +65,9 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 	case "timestamp":
 		// TODO: handle errors gracefully
 		return time.Parse(TimestampLayout, val)
+	case "timestamp with time zone":
+		// TODO: handle errors gracefully
+		return time.Parse(TimestampWithTimezoneLayout, val)
 	case "array", "map", "row": // gracefully handle these complex types as strings
 		return val, nil
 	case "json":
