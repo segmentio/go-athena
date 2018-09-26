@@ -50,6 +50,8 @@ func (c *conn) runQuery(ctx context.Context, query string) (driver.Rows, error) 
 	return newRows(rowsConfig{
 		Athena:  c.athena,
 		QueryID: queryID,
+		// todo add check for ddl queries to not skip header(#10)
+		SkipHeader: true,
 	})
 }
 
