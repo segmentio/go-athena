@@ -52,7 +52,7 @@ environment variables, but you can use anything supported by the
 [Default Credential Provider Chain].
 
 The tests support a few environment variables:
-- `ATHENA_DATBASE` can be used to override the default database "go_athena_tests"
+- `ATHENA_DATABASE` can be used to override the default database "go_athena_tests"
 - `S3_BUCKET` can be used to override the default S3 bucket of "go-athena-tests"
 
 
