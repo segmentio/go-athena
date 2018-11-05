@@ -2,6 +2,7 @@ package athena
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -56,6 +57,10 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 		return val, nil
 	case "timestamp":
 		return time.Parse(TimestampLayout, val)
+	case "array":
+		arr := make([]string, 0)
+		err := json.Unmarshal([]byte(val), &arr)
+		return arr, err
 	default:
 		panic(fmt.Errorf("unknown type `%s` with value %s", athenaType, val))
 	}
