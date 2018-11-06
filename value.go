@@ -3,6 +3,7 @@ package athena
 import (
 	"database/sql/driver"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -58,9 +59,14 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 	case "timestamp":
 		return time.Parse(TimestampLayout, val)
 	case "array":
-		temp := val[1 : len(val)-1]
-		ret := strings.Split(temp, ",")
-		fmt.Printf("ARRAY: %v", ret)
+		matched, err := regexp.MatchString(`\[.*]`, val)
+		if err != nil {
+			return nil, err
+		}
+		if !matched {
+			return nil, fmt.Errorf("invalid format for array: %s", val)
+		}
+		ret := strings.Split(val[1:len(val)-1], ",")
 		return ret, nil
 	default:
 		panic(fmt.Errorf("unknown type `%s` with value %s", athenaType, val))
