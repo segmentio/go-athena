@@ -60,6 +60,7 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 	case "array":
 		temp := val[1 : len(val)-1]
 		ret := strings.Split(temp, ",")
+		fmt.Printf("ARRAY: %v", ret)
 		return ret, nil
 	default:
 		panic(fmt.Errorf("unknown type `%s` with value %s", athenaType, val))
