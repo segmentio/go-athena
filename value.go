@@ -2,9 +2,9 @@ package athena
 
 import (
 	"database/sql/driver"
-	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/athena"
@@ -58,9 +58,9 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 	case "timestamp":
 		return time.Parse(TimestampLayout, val)
 	case "array":
-		arr := make([]string, 0)
-		err := json.Unmarshal([]byte(val), &arr)
-		return arr, err
+		temp := val[1 : len(val)-1]
+		ret := strings.Split(temp, ",")
+		return ret, nil
 	default:
 		panic(fmt.Errorf("unknown type `%s` with value %s", athenaType, val))
 	}
