@@ -48,6 +48,7 @@ func TestQuery(t *testing.T) {
 			DoubleType:    1.32112345,
 			StringType:    "some string",
 			TimestampType: athenaTimestamp(time.Date(2006, 1, 2, 3, 4, 11, 0, time.UTC)),
+			DateType:      athenaDate(time.Date(2006, 1, 2, 0, 0, 0, 0, time.UTC)),
 		},
 		{
 			SmallintType:  9,
@@ -58,6 +59,7 @@ func TestQuery(t *testing.T) {
 			DoubleType:    1.235,
 			StringType:    "another string",
 			TimestampType: athenaTimestamp(time.Date(2017, 12, 3, 1, 11, 12, 0, time.UTC)),
+			DateType:      athenaDate(time.Date(2017, 12, 3, 0, 0, 0, 0, time.UTC)),
 		},
 		{
 			SmallintType:  9,
@@ -68,9 +70,10 @@ func TestQuery(t *testing.T) {
 			FloatType:     3.14159,
 			StringType:    "another string",
 			TimestampType: athenaTimestamp(time.Date(2017, 12, 3, 20, 11, 12, 0, time.UTC)),
+			DateType:      athenaDate(time.Date(2017, 12, 3, 0, 0, 0, 0, time.UTC)),
 		},
 	}
-	expectedTypeNames := []string{"varchar", "smallint", "integer", "bigint", "boolean", "float", "double", "varchar", "timestamp"}
+	expectedTypeNames := []string{"varchar", "smallint", "integer", "bigint", "boolean", "float", "double", "varchar", "timestamp", "date"}
 	harness.uploadData(expected)
 
 	rows := harness.mustQuery("select * from %s", harness.table)
@@ -90,6 +93,7 @@ func TestQuery(t *testing.T) {
 			&row.DoubleType,
 			&row.StringType,
 			&row.TimestampType,
+			&row.DateType,
 		))
 
 		assert.Equal(t, expected[index], row, fmt.Sprintf("index: %d", index))
@@ -128,6 +132,7 @@ type dummyRow struct {
 	DoubleType    float64         `json:"doubleType"`
 	StringType    string          `json:"stringType"`
 	TimestampType athenaTimestamp `json:"timestampType"`
+	DateType      athenaDate      `json:"dateType"`
 }
 
 type athenaHarness struct {
@@ -163,7 +168,8 @@ func (a *athenaHarness) setupTable() {
 	floatType float,
 	doubleType double,
 	stringType string,
-	timestampType timestamp
+	timestampType timestamp,
+	dateType date
 )
 ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
 WITH SERDEPROPERTIES (
@@ -216,5 +222,19 @@ func (t athenaTimestamp) String() string {
 }
 
 func (t athenaTimestamp) Equal(t2 athenaTimestamp) bool {
+	return time.Time(t).Equal(time.Time(t2))
+}
+
+type athenaDate time.Time
+
+func (t athenaDate) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.String())
+}
+
+func (t athenaDate) String() string {
+	return time.Time(t).Format(DateLayout)
+}
+
+func (t athenaDate) Equal(t2 athenaDate) bool {
 	return time.Time(t).Equal(time.Time(t2))
 }
