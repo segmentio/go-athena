@@ -52,7 +52,7 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 		return nil, fmt.Errorf("cannot parse '%s' as boolean", val)
 	case "float":
 		return strconv.ParseFloat(val, 32)
-	case "double":
+	case "double", "decimal":
 		return strconv.ParseFloat(val, 64)
 	case "varchar", "string":
 		return val, nil
