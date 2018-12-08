@@ -49,6 +49,7 @@ func TestQuery(t *testing.T) {
 			StringType:    "some string",
 			TimestampType: athenaTimestamp(time.Date(2006, 1, 2, 3, 4, 11, 0, time.UTC)),
 			DateType:      athenaDate(time.Date(2006, 1, 2, 0, 0, 0, 0, time.UTC)),
+			DecimalType:   1001,
 		},
 		{
 			SmallintType:  9,
@@ -60,6 +61,7 @@ func TestQuery(t *testing.T) {
 			StringType:    "another string",
 			TimestampType: athenaTimestamp(time.Date(2017, 12, 3, 1, 11, 12, 0, time.UTC)),
 			DateType:      athenaDate(time.Date(2017, 12, 3, 0, 0, 0, 0, time.UTC)),
+			DecimalType:   0,
 		},
 		{
 			SmallintType:  9,
@@ -71,9 +73,10 @@ func TestQuery(t *testing.T) {
 			StringType:    "another string",
 			TimestampType: athenaTimestamp(time.Date(2017, 12, 3, 20, 11, 12, 0, time.UTC)),
 			DateType:      athenaDate(time.Date(2017, 12, 3, 0, 0, 0, 0, time.UTC)),
+			DecimalType:   0.48,
 		},
 	}
-	expectedTypeNames := []string{"varchar", "smallint", "integer", "bigint", "boolean", "float", "double", "varchar", "timestamp", "date"}
+	expectedTypeNames := []string{"varchar", "smallint", "integer", "bigint", "boolean", "float", "double", "varchar", "timestamp", "date", "decimal"}
 	harness.uploadData(expected)
 
 	rows := harness.mustQuery("select * from %s", harness.table)
@@ -94,6 +97,7 @@ func TestQuery(t *testing.T) {
 			&row.StringType,
 			&row.TimestampType,
 			&row.DateType,
+			&row.DecimalType,
 		))
 
 		assert.Equal(t, expected[index], row, fmt.Sprintf("index: %d", index))
@@ -133,6 +137,7 @@ type dummyRow struct {
 	StringType    string          `json:"stringType"`
 	TimestampType athenaTimestamp `json:"timestampType"`
 	DateType      athenaDate      `json:"dateType"`
+	DecimalType   float64         `json:"decimalType"`
 }
 
 type athenaHarness struct {
@@ -169,7 +174,8 @@ func (a *athenaHarness) setupTable() {
 	doubleType double,
 	stringType string,
 	timestampType timestamp,
-	dateType date
+	dateType date,
+	decimalType decimal(11, 5)
 )
 ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
 WITH SERDEPROPERTIES (
