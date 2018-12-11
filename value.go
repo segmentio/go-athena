@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"time"
-
+	"encoding/json"
 	"github.com/aws/aws-sdk-go/service/athena"
 )
 
@@ -62,6 +62,12 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 		return time.Parse(TimestampWithTimeZoneLayout, val)
 	case "date":
 		return time.Parse(DateLayout, val)
+	case "json":
+		json,_ := json.Marshal ( val)
+		return string(json), nil
+	case "array":
+		json,_ := json.Marshal ( val)
+		return string(json), nil
 	default:
 		panic(fmt.Errorf("unknown type `%s` with value %s", athenaType, val))
 	}
