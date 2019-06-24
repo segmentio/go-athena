@@ -80,6 +80,7 @@ func (d *Driver) Open(connStr string) (driver.Conn, error) {
 		db:             cfg.Database,
 		OutputLocation: cfg.OutputLocation,
 		pollFrequency:  cfg.PollFrequency,
+		workgroup:      cfg.WorkGroup,
 	}, nil
 }
 
@@ -99,6 +100,10 @@ func Open(cfg Config) (*sql.DB, error) {
 		return nil, errors.New("session is required")
 	}
 
+	if cfg.WorkGroup == "" {
+		cfg.WorkGroup = "primary"
+	}
+
 	// This hack was copied from jackc/pgx. Sorry :(
 	// https://github.com/jackc/pgx/blob/70a284f4f33a9cc28fd1223f6b83fb00deecfe33/stdlib/sql.go#L130-L136
 	openFromSessionMutex.Lock()
@@ -115,6 +120,7 @@ type Config struct {
 	Session        *session.Session
 	Database       string
 	OutputLocation string
+	WorkGroup      string
 
 	PollFrequency time.Duration
 }
@@ -138,6 +144,10 @@ func configFromConnectionString(connStr string) (*Config, error) {
 
 	cfg.Database = args.Get("db")
 	cfg.OutputLocation = args.Get("output_location")
+	cfg.WorkGroup = args.Get("workgroup")
+	if cfg.WorkGroup == "" {
+		cfg.WorkGroup = "primary"
+	}
 
 	frequencyStr := args.Get("poll_frequency")
 	if frequencyStr != "" {
