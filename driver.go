@@ -58,6 +58,9 @@ func init() {
 // - `region` (optional)
 // Override AWS region. Useful if it is not set with environment variable.
 //
+// - `workgroup` (optional)
+// Athena's workgroup. This defaults to "primary".
+//
 // Credentials must be accessible via the SDK's Default Credential Provider Chain.
 // For more advanced AWS credentials/session/config management, please supply
 // a custom AWS session directly via `athena.Open()`.
