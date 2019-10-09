@@ -16,9 +16,9 @@ const (
 	DateLayout                  = "2006-01-02"
 )
 
-func convertRow(columns []*athena.ColumnInfo, in []*athena.Datum, ret []driver.Value) error {
+func convertRow(columns []*athena.ColumnInfo, in []*athena.Datum, ret []driver.Value, arraysAsStrings bool) error {
 	for i, val := range in {
-		coerced, err := convertValue(*columns[i].Type, val.VarCharValue)
+		coerced, err := convertValue(*columns[i].Type, val.VarCharValue, arraysAsStrings)
 		if err != nil {
 			return err
 		}
@@ -29,7 +29,7 @@ func convertRow(columns []*athena.ColumnInfo, in []*athena.Datum, ret []driver.V
 	return nil
 }
 
-func convertValue(athenaType string, rawValue *string) (interface{}, error) {
+func convertValue(athenaType string, rawValue *string, arraysAsStrings bool) (interface{}, error) {
 	if rawValue == nil {
 		return nil, nil
 	}
@@ -62,6 +62,12 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 		return time.Parse(TimestampWithTimeZoneLayout, val)
 	case "date":
 		return time.Parse(DateLayout, val)
+	case "array":
+		if arraysAsStrings {
+			return val, nil
+		}
+
+		fallthrough
 	default:
 		panic(fmt.Errorf("unknown type `%s` with value %s", athenaType, val))
 	}

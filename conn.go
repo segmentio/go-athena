@@ -12,9 +12,10 @@ import (
 )
 
 type conn struct {
-	athena         athenaiface.AthenaAPI
-	db             string
-	OutputLocation string
+	athena          athenaiface.AthenaAPI
+	db              string
+	OutputLocation  string
+	arraysAsStrings bool
 
 	pollFrequency time.Duration
 }
@@ -48,8 +49,9 @@ func (c *conn) runQuery(ctx context.Context, query string) (driver.Rows, error) 
 	}
 
 	return newRows(rowsConfig{
-		Athena:  c.athena,
-		QueryID: queryID,
+		Athena:          c.athena,
+		QueryID:         queryID,
+		arraysAsStrings: c.arraysAsStrings,
 		// todo add check for ddl queries to not skip header(#10)
 		SkipHeader: true,
 	})

@@ -76,10 +76,11 @@ func (d *Driver) Open(connStr string) (driver.Conn, error) {
 	}
 
 	return &conn{
-		athena:         athena.New(cfg.Session),
-		db:             cfg.Database,
-		OutputLocation: cfg.OutputLocation,
-		pollFrequency:  cfg.PollFrequency,
+		athena:          athena.New(cfg.Session),
+		db:              cfg.Database,
+		OutputLocation:  cfg.OutputLocation,
+		arraysAsStrings: cfg.arraysAsStrings,
+		pollFrequency:   cfg.PollFrequency,
 	}, nil
 }
 
@@ -112,9 +113,10 @@ func Open(cfg Config) (*sql.DB, error) {
 
 // Config is the input to Open().
 type Config struct {
-	Session        *session.Session
-	Database       string
-	OutputLocation string
+	Session         *session.Session
+	Database        string
+	OutputLocation  string
+	arraysAsStrings bool
 
 	PollFrequency time.Duration
 }
@@ -138,6 +140,7 @@ func configFromConnectionString(connStr string) (*Config, error) {
 
 	cfg.Database = args.Get("db")
 	cfg.OutputLocation = args.Get("output_location")
+	cfg.arraysAsStrings = args.Get("arrays_as_strings") == "true"
 
 	frequencyStr := args.Get("poll_frequency")
 	if frequencyStr != "" {
