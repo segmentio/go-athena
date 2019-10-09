@@ -10,8 +10,9 @@ import (
 )
 
 type rows struct {
-	athena  athenaiface.AthenaAPI
-	queryID string
+	athena          athenaiface.AthenaAPI
+	queryID         string
+	arraysAsStrings bool
 
 	done          bool
 	skipHeaderRow bool
@@ -19,16 +20,18 @@ type rows struct {
 }
 
 type rowsConfig struct {
-	Athena     athenaiface.AthenaAPI
-	QueryID    string
-	SkipHeader bool
+	Athena          athenaiface.AthenaAPI
+	QueryID         string
+	arraysAsStrings bool
+	SkipHeader      bool
 }
 
 func newRows(cfg rowsConfig) (*rows, error) {
 	r := rows{
-		athena:        cfg.Athena,
-		queryID:       cfg.QueryID,
-		skipHeaderRow: cfg.SkipHeader,
+		athena:          cfg.Athena,
+		queryID:         cfg.QueryID,
+		skipHeaderRow:   cfg.SkipHeader,
+		arraysAsStrings: cfg.arraysAsStrings,
 	}
 
 	shouldContinue, err := r.fetchNextPage(nil)
@@ -82,7 +85,7 @@ func (r *rows) Next(dest []driver.Value) error {
 	// Shift to next row
 	cur := r.out.ResultSet.Rows[0]
 	columns := r.out.ResultSet.ResultSetMetadata.ColumnInfo
-	if err := convertRow(columns, cur.Data, dest); err != nil {
+	if err := convertRow(columns, cur.Data, dest, r.arraysAsStrings); err != nil {
 		return err
 	}
 
