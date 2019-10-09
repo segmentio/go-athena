@@ -162,7 +162,7 @@ func setup(t *testing.T) *athenaHarness {
 
 func (a *athenaHarness) setupTable() {
 	// tables cannot start with numbers or contain dashes
-	id, _ := uuid.NewV4()
+	id := uuid.NewV4()
 	a.table = "t_" + strings.Replace(id.String(), "-", "_", -1)
 	a.mustExec(`CREATE EXTERNAL TABLE %[1]s (
 	nullValue string,
