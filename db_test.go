@@ -126,6 +126,25 @@ func TestOpen(t *testing.T) {
 	require.NoError(t, err, "Query")
 }
 
+func TestDDLQuery(t *testing.T) {
+	harness := setup(t)
+	defer harness.teardown()
+
+	rows := harness.mustQuery("show tables")
+
+	output := make([]string, 0)
+	for rows.Next() {
+		var table string
+
+		err := rows.Scan(&table)
+		assert.NoError(t, err, "rows.Scan()")
+
+		output = append(output, table)
+	}
+
+	assert.Equal(t, 1, len(output), "query output")
+}
+
 type dummyRow struct {
 	NullValue     *struct{}       `json:"nullValue"`
 	SmallintType  int             `json:"smallintType"`
