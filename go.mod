@@ -1,4 +1,4 @@
-module github.com/segmentio/go-athena
+module github.com/akrennmair/go-athena
 
 go 1.13
 
