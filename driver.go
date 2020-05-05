@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/athena"
 )
@@ -140,6 +141,14 @@ func configFromConnectionString(connStr string) (*Config, error) {
 	if region := args.Get("region"); region != "" {
 		acfg = append(acfg, &aws.Config{Region: aws.String(region)})
 	}
+
+	if secretID := args.Get("access_key_id"); secretID != "" {
+		secret := args.Get("secret_access_key")
+		acfg = append(acfg, &aws.Config{
+			Credentials: credentials.NewStaticCredentials(secretID, secret, ""),
+		})
+	}
+
 	cfg.Session, err = session.NewSession(acfg...)
 	if err != nil {
 		return nil, err
