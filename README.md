@@ -10,7 +10,8 @@ import (
 )
 
 func main() {
-  db, _ := sql.Open("athena", "db=default&output_location=s3://results")
+  // Make sure the access key and access key id are url encoded first
+  db, _ := sql.Open("athena", "db=default&output_location=s3://results&secret_key_id=XX&secret_access_key=YY")
   rows, _ := db.Query("SELECT url, code from cloudfront")
 
   for rows.Next() {
