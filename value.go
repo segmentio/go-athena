@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/athena"
@@ -62,6 +63,16 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 		return time.Parse(TimestampWithTimeZoneLayout, val)
 	case "date":
 		return time.Parse(DateLayout, val)
+	case "varbinary":
+		result := []byte{}
+		for _, byt := range strings.Split(val, " ") {
+			v, err := strconv.ParseUint(byt, 16, 8)
+			if err != nil {
+				return nil, fmt.Errorf("can't parse %s as byte: %w", byt, err)
+			}
+			result = append(result, byte(v))
+		}
+		return string(result), nil
 	default:
 		panic(fmt.Errorf("unknown type `%s` with value %s", athenaType, val))
 	}
