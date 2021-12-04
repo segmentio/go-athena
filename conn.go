@@ -20,9 +20,14 @@ type conn struct {
 	pollFrequency time.Duration
 }
 
+var (
+	errPrepStmtsUnsupported = errors.New("prepared statements are unsupported by Athena")
+	errTxnsUnsupported      = errors.New("transactions are unsupported by Athena")
+)
+
 func (c *conn) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
 	if len(args) > 0 {
-		panic("Athena doesn't support prepared statements. Format your own arguments.")
+		return nil, errPrepStmtsUnsupported
 	}
 
 	rows, err := c.runQuery(ctx, query)
@@ -31,7 +36,7 @@ func (c *conn) QueryContext(ctx context.Context, query string, args []driver.Nam
 
 func (c *conn) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
 	if len(args) > 0 {
-		panic("Athena doesn't support prepared statements. Format your own arguments.")
+		return nil, errPrepStmtsUnsupported
 	}
 
 	_, err := c.runQuery(ctx, query)
@@ -111,11 +116,11 @@ func (c *conn) waitOnQuery(ctx context.Context, queryID string) error {
 }
 
 func (c *conn) Prepare(query string) (driver.Stmt, error) {
-	panic("Athena doesn't support prepared statements")
+	return nil, errPrepStmtsUnsupported
 }
 
 func (c *conn) Begin() (driver.Tx, error) {
-	panic("Athena doesn't support transactions")
+	return nil, errTxnsUnsupported
 }
 
 func (c *conn) Close() error {
@@ -124,17 +129,3 @@ func (c *conn) Close() error {
 
 var _ driver.QueryerContext = (*conn)(nil)
 var _ driver.ExecerContext = (*conn)(nil)
-
-// HACK(tejasmanohar): database/sql calls Prepare() if your driver doesn't implement
-// Queryer. Regardless, db.Query/Exec* calls Query/Exec-Context so I've filed a bug--
-// https://github.com/golang/go/issues/22980.
-func (c *conn) Query(query string, args []driver.Value) (driver.Rows, error) {
-	panic("Query() is noop")
-}
-
-func (c *conn) Exec(query string, args []driver.Value) (driver.Result, error) {
-	panic("Exec() is noop")
-}
-
-var _ driver.Queryer = (*conn)(nil)
-var _ driver.Execer = (*conn)(nil)
