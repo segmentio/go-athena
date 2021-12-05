@@ -212,26 +212,28 @@ func TestRows_Next(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		r, _ := newRows(rowsConfig{
-			Athena:     new(mockAthenaClient),
-			QueryID:    test.queryID,
-			SkipHeader: test.skipHeader,
-		})
+		t.Run(test.desc, func(t *testing.T) {
+			r, _ := newRows(rowsConfig{
+				Athena:     new(mockAthenaClient),
+				QueryID:    test.queryID,
+				SkipHeader: test.skipHeader,
+			})
 
-		var firstName, lastName string
-		cnt := 0
-		for {
-			err := r.Next(castToValue(&firstName, &lastName))
-			if err != nil {
-				if err != io.EOF {
-					assert.Equal(t, test.expectedError, err)
+			var firstName, lastName string
+			cnt := 0
+			for {
+				err := r.Next(castToValue(&firstName, &lastName))
+				if err != nil {
+					if err != io.EOF {
+						assert.Equal(t, test.expectedError, err)
+					}
+					break
 				}
-				break
+				cnt++
 			}
-			cnt++
-		}
-		if test.expectedError == nil {
-			assert.Equal(t, test.expectedResultsSize, cnt)
-		}
+			if test.expectedError == nil {
+				assert.Equal(t, test.expectedResultsSize, cnt)
+			}
+		})
 	}
 }
