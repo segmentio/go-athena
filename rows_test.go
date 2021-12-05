@@ -1,12 +1,15 @@
 package athena
 
 import (
+	"context"
 	"database/sql/driver"
 	"errors"
 	"io"
 	"math/rand"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/athena/athenaiface"
 	"github.com/stretchr/testify/assert"
@@ -168,6 +171,23 @@ func dummyFailedIterationResponse(token string) (*athena.GetQueryResultsOutput, 
 
 type mockAthenaClient struct {
 	athenaiface.AthenaAPI
+}
+
+func (m *mockAthenaClient) StartQueryExecution(input *athena.StartQueryExecutionInput) (*athena.StartQueryExecutionOutput, error) {
+	return &athena.StartQueryExecutionOutput{
+		QueryExecutionId: aws.String("select"),
+	}, nil
+}
+
+func (m *mockAthenaClient) GetQueryExecutionWithContext(ctx context.Context, input *athena.GetQueryExecutionInput, options ...request.Option) (*athena.GetQueryExecutionOutput, error) {
+	return &athena.GetQueryExecutionOutput{
+		QueryExecution: &athena.QueryExecution{
+			QueryExecutionId: aws.String("select"),
+			Status: &athena.QueryExecutionStatus{
+				State: aws.String(athena.QueryExecutionStateSucceeded),
+			},
+		},
+	}, nil
 }
 
 func (m *mockAthenaClient) GetQueryResults(query *athena.GetQueryResultsInput) (*athena.GetQueryResultsOutput, error) {

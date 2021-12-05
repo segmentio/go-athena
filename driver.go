@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/athena"
+	"github.com/aws/aws-sdk-go/service/athena/athenaiface"
 )
 
 var (
@@ -80,7 +81,7 @@ func (d *Driver) Open(connStr string) (driver.Conn, error) {
 	}
 
 	return &conn{
-		athena:         athena.New(cfg.Session),
+		athena:         cfg.Athena,
 		db:             cfg.Database,
 		OutputLocation: cfg.OutputLocation,
 		pollFrequency:  cfg.PollFrequency,
@@ -100,8 +101,8 @@ func Open(cfg Config) (*sql.DB, error) {
 		return nil, errors.New("s3_staging_url is required")
 	}
 
-	if cfg.Session == nil {
-		return nil, errors.New("session is required")
+	if cfg.Athena == nil {
+		return nil, errors.New("athena API object is required")
 	}
 
 	if cfg.WorkGroup == "" {
@@ -121,7 +122,8 @@ func Open(cfg Config) (*sql.DB, error) {
 
 // Config is the input to Open().
 type Config struct {
-	Session        *session.Session
+	Athena athenaiface.AthenaAPI
+	//Session        *session.Session
 	Database       string
 	OutputLocation string
 	WorkGroup      string
@@ -149,10 +151,11 @@ func configFromConnectionString(connStr string) (*Config, error) {
 		})
 	}
 
-	cfg.Session, err = session.NewSession(acfg...)
+	session, err := session.NewSession(acfg...)
 	if err != nil {
 		return nil, err
 	}
+	cfg.Athena = athena.New(session)
 
 	cfg.Database = args.Get("db")
 	cfg.OutputLocation = args.Get("output_location")
