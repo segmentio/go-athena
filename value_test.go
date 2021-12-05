@@ -29,7 +29,7 @@ func TestConvertValue(t *testing.T) {
 		"date":                     {"date", "2015-05-09", time.Date(2015, time.May, 9, 0, 0, 0, 0, time.UTC), false},
 		"varbinary":                {"varbinary", "2c 4a 4b 4c 2f", []byte{0x2c, 0x4a, 0x4b, 0x4c, 0x2f}, false},
 		"varbinary invalid":        {"varbinary", "invalid", nil, true},
-		"row":                      {"row", "{foo=x,bar=y}", nil, true},
+		"row":                      {"row", "{foo=x,bar=y}", "{foo=x,bar=y}", false},
 		"invalid type":             {"invalid type", "", nil, true},
 	}
 

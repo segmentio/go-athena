@@ -2,7 +2,6 @@ package athena
 
 import (
 	"database/sql/driver"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -75,7 +74,7 @@ func convertValue(athenaType string, rawValue *string) (interface{}, error) {
 		}
 		return result, nil
 	case "row":
-		return nil, errors.New("type \"row\" is unsupported by the go-athena driver")
+		return val, nil
 	default:
 		return nil, fmt.Errorf("unknown type %q with value %q", athenaType, val)
 	}
