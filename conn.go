@@ -21,7 +21,7 @@ type conn struct {
 
 func (c *conn) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
 	if len(args) > 0 {
-		panic("Athena doesn't support prepared statements. Format your own arguments.")
+		panic("The go-athena driver doesn't support prepared statements yet. Format your own arguments.")
 	}
 
 	rows, err := c.runQuery(ctx, query)
@@ -30,7 +30,7 @@ func (c *conn) QueryContext(ctx context.Context, query string, args []driver.Nam
 
 func (c *conn) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
 	if len(args) > 0 {
-		panic("Athena doesn't support prepared statements. Format your own arguments.")
+		panic("The go-athena driver doesn't support prepared statements yet. Format your own arguments.")
 	}
 
 	_, err := c.runQuery(ctx, query)
@@ -122,17 +122,3 @@ func (c *conn) Close() error {
 
 var _ driver.QueryerContext = (*conn)(nil)
 var _ driver.ExecerContext = (*conn)(nil)
-
-// HACK(tejasmanohar): database/sql calls Prepare() if your driver doesn't implement
-// Queryer. Regardless, db.Query/Exec* calls Query/Exec-Context so I've filed a bug--
-// https://github.com/golang/go/issues/22980.
-func (c *conn) Query(query string, args []driver.Value) (driver.Rows, error) {
-	panic("Query() is noop")
-}
-
-func (c *conn) Exec(query string, args []driver.Value) (driver.Result, error) {
-	panic("Exec() is noop")
-}
-
-var _ driver.Queryer = (*conn)(nil)
-var _ driver.Execer = (*conn)(nil)
