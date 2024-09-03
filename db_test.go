@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -35,8 +35,9 @@ func init() {
 }
 
 func TestQuery(t *testing.T) {
-	harness := setup(t)
-	// defer harness.teardown()
+	ctx := context.Background()
+	harness := setup(ctx, t)
+	// defer harness.teardown(ctx)
 
 	expected := []dummyRow{
 		{
@@ -77,9 +78,9 @@ func TestQuery(t *testing.T) {
 		},
 	}
 	expectedTypeNames := []string{"varchar", "smallint", "integer", "bigint", "boolean", "float", "double", "varchar", "timestamp", "date", "decimal"}
-	harness.uploadData(expected)
+	harness.uploadData(ctx, expected)
 
-	rows := harness.mustQuery("select * from %s", harness.table)
+	rows := harness.mustQuery(ctx, "select * from %s", harness.table)
 	index := -1
 	for rows.Next() {
 		index++
@@ -115,8 +116,10 @@ func TestQuery(t *testing.T) {
 }
 
 func TestOpen(t *testing.T) {
-	db, err := Open(Config{
-		Session:        session.Must(session.NewSession()),
+	awsConfig, err := config.LoadDefaultConfig(context.Background())
+	require.NoError(t, err, "LoadDefaultConfig")
+	db, err := Open(DriverConfig{
+		Config: &awsConfig,
 		Database:       AthenaDatabase,
 		OutputLocation: fmt.Sprintf("s3://%s/noop", S3Bucket),
 	})
@@ -143,28 +146,29 @@ type dummyRow struct {
 type athenaHarness struct {
 	t  *testing.T
 	db *sql.DB
-	s3 *s3.S3
+	s3 *s3.Client
 
 	table string
 }
 
-func setup(t *testing.T) *athenaHarness {
-	harness := athenaHarness{t: t, s3: s3.New(session.New())}
+func setup(ctx context.Context, t *testing.T) *athenaHarness {
+	awsConfig, err := config.LoadDefaultConfig(ctx)
+	require.NoError(t, err)
+	harness := athenaHarness{t: t, s3: s3.NewFromConfig(awsConfig)}
 
-	var err error
 	harness.db, err = sql.Open("athena", fmt.Sprintf("db=%s&output_location=s3://%s/output", AthenaDatabase, S3Bucket))
 	require.NoError(t, err)
 
-	harness.setupTable()
+	harness.setupTable(ctx)
 
 	return &harness
 }
 
-func (a *athenaHarness) setupTable() {
+func (a *athenaHarness) setupTable(ctx context.Context) {
 	// tables cannot start with numbers or contain dashes
 	id := uuid.NewV4()
 	a.table = "t_" + strings.Replace(id.String(), "-", "_", -1)
-	a.mustExec(`CREATE EXTERNAL TABLE %[1]s (
+	a.mustExec(ctx, `CREATE EXTERNAL TABLE %[1]s (
 	nullValue string,
 	smallintType smallint,
 	intType int,
@@ -184,24 +188,24 @@ WITH SERDEPROPERTIES (
 	fmt.Printf("created table: %s", a.table)
 }
 
-func (a *athenaHarness) teardown() {
-	a.mustExec("drop table %s", a.table)
+func (a *athenaHarness) teardown(ctx context.Context) {
+	a.mustExec(ctx, "drop table %s", a.table)
 }
 
-func (a *athenaHarness) mustExec(sql string, args ...interface{}) {
+func (a *athenaHarness) mustExec(ctx context.Context, sql string, args ...interface{}) {
 	query := fmt.Sprintf(sql, args...)
-	_, err := a.db.ExecContext(context.TODO(), query)
+	_, err := a.db.ExecContext(ctx, query)
 	require.NoError(a.t, err, query)
 }
 
-func (a *athenaHarness) mustQuery(sql string, args ...interface{}) *sql.Rows {
+func (a *athenaHarness) mustQuery(ctx context.Context, sql string, args ...interface{}) *sql.Rows {
 	query := fmt.Sprintf(sql, args...)
-	rows, err := a.db.QueryContext(context.TODO(), query)
+	rows, err := a.db.QueryContext(ctx, query)
 	require.NoError(a.t, err, query)
 	return rows
 }
 
-func (a *athenaHarness) uploadData(rows []dummyRow) {
+func (a *athenaHarness) uploadData(ctx context.Context, rows []dummyRow) {
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
 	for _, row := range rows {
@@ -209,7 +213,7 @@ func (a *athenaHarness) uploadData(rows []dummyRow) {
 		require.NoError(a.t, err)
 	}
 
-	_, err := a.s3.PutObject(&s3.PutObjectInput{
+	_, err := a.s3.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(S3Bucket),
 		Key:    aws.String(fmt.Sprintf("%s/fixture.json", a.table)),
 		Body:   bytes.NewReader(buf.Bytes()),
