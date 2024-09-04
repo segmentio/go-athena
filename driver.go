@@ -59,6 +59,9 @@ func init() {
 // - `region` (optional)
 // Override AWS region. Useful if it is not set with environment variable.
 //
+// - `workgroup` (optional)
+// Athena's workgroup. This defaults to "primary".
+//
 // Credentials must be accessible via the SDK's Default Credential Provider Chain.
 // For more advanced AWS credentials/session/config management, please supply
 // a custom AWS session directly via `athena.Open()`.
@@ -82,6 +85,7 @@ func (d *Driver) Open(connStr string) (driver.Conn, error) {
 		db:             cfg.Database,
 		OutputLocation: cfg.OutputLocation,
 		pollFrequency:  cfg.PollFrequency,
+		workgroup:      cfg.WorkGroup,
 	}, nil
 }
 
@@ -101,6 +105,10 @@ func Open(cfg DriverConfig) (*sql.DB, error) {
 		return nil, errors.New("AWS config is required")
 	}
 
+	if cfg.WorkGroup == "" {
+		cfg.WorkGroup = "primary"
+	}
+
 	// This hack was copied from jackc/pgx. Sorry :(
 	// https://github.com/jackc/pgx/blob/70a284f4f33a9cc28fd1223f6b83fb00deecfe33/stdlib/sql.go#L130-L136
 	openFromSessionMutex.Lock()
@@ -117,6 +125,7 @@ type DriverConfig struct {
 	Config         *aws.Config
 	Database       string
 	OutputLocation string
+	WorkGroup      string
 
 	PollFrequency time.Duration
 }
@@ -140,6 +149,10 @@ func configFromConnectionString(ctx context.Context, connStr string) (*DriverCon
 
 	cfg.Database = args.Get("db")
 	cfg.OutputLocation = args.Get("output_location")
+	cfg.WorkGroup = args.Get("workgroup")
+	if cfg.WorkGroup == "" {
+		cfg.WorkGroup = "primary"
+	}
 
 	frequencyStr := args.Get("poll_frequency")
 	if frequencyStr != "" {
