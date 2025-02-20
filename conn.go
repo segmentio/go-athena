@@ -17,6 +17,7 @@ type conn struct {
 	OutputLocation string
 
 	pollFrequency time.Duration
+	workgroup     string
 }
 
 func (c *conn) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
@@ -65,6 +66,7 @@ func (c *conn) startQuery(ctx context.Context, query string) (string, error) {
 		ResultConfiguration: &types.ResultConfiguration{
 			OutputLocation: aws.String(c.OutputLocation),
 		},
+		WorkGroup: aws.String(c.workgroup),
 	})
 	if err != nil {
 		return "", err
