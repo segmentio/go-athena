@@ -80,6 +80,7 @@ func (d *Driver) Open(connStr string) (driver.Conn, error) {
 	return &conn{
 		athena:         athena.NewFromConfig(*cfg.Config),
 		db:             cfg.Database,
+		catalog:        cfg.Catalog,
 		OutputLocation: cfg.OutputLocation,
 		pollFrequency:  cfg.PollFrequency,
 	}, nil
@@ -116,6 +117,7 @@ func Open(cfg DriverConfig) (*sql.DB, error) {
 type DriverConfig struct {
 	Config         *aws.Config
 	Database       string
+	Catalog        string
 	OutputLocation string
 
 	PollFrequency time.Duration
@@ -139,6 +141,7 @@ func configFromConnectionString(ctx context.Context, connStr string) (*DriverCon
 	cfg.Config = &awsConfig
 
 	cfg.Database = args.Get("db")
+	cfg.Catalog = args.Get("catalog")
 	cfg.OutputLocation = args.Get("output_location")
 
 	frequencyStr := args.Get("poll_frequency")

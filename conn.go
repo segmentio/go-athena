@@ -13,6 +13,7 @@ import (
 
 type conn struct {
 	athena         athenaAPI
+	catalog        string
 	db             string
 	OutputLocation string
 
@@ -57,11 +58,15 @@ func (c *conn) runQuery(ctx context.Context, query string) (driver.Rows, error) 
 
 // startQuery starts an Athena query and returns its ID.
 func (c *conn) startQuery(ctx context.Context, query string) (string, error) {
+	queryCtx := &types.QueryExecutionContext{
+		Database: aws.String(c.db),
+	}
+	if c.catalog != "" {
+		queryCtx.Catalog = aws.String(c.catalog)
+	}
 	resp, err := c.athena.StartQueryExecution(ctx, &athena.StartQueryExecutionInput{
-		QueryString: aws.String(query),
-		QueryExecutionContext: &types.QueryExecutionContext{
-			Database: aws.String(c.db),
-		},
+		QueryString:           aws.String(query),
+		QueryExecutionContext: queryCtx,
 		ResultConfiguration: &types.ResultConfiguration{
 			OutputLocation: aws.String(c.OutputLocation),
 		},

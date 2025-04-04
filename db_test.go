@@ -119,7 +119,7 @@ func TestOpen(t *testing.T) {
 	awsConfig, err := config.LoadDefaultConfig(context.Background())
 	require.NoError(t, err, "LoadDefaultConfig")
 	db, err := Open(DriverConfig{
-		Config: &awsConfig,
+		Config:         &awsConfig,
 		Database:       AthenaDatabase,
 		OutputLocation: fmt.Sprintf("s3://%s/noop", S3Bucket),
 	})
@@ -127,6 +127,28 @@ func TestOpen(t *testing.T) {
 
 	_, err = db.Query("SELECT 1")
 	require.NoError(t, err, "Query")
+}
+
+func TestDriverWithDBCatalog(t *testing.T) {
+	ctx := context.Background()
+	catalogName := os.Getenv("ATHENA_CATALOG")
+	if catalogName == "" {
+		t.Skip("ATHENA_CATALOG not set")
+	}
+
+	tableName := os.Getenv("ATHENA_TABLE")
+	if tableName == "" {
+		tableName = "catalog_test_table"
+	}
+	connStr := fmt.Sprintf("catalog=%s&db=%s&output_location=s3://%s/output", catalogName, AthenaDatabase, S3Bucket)
+	db, err := sql.Open("athena", connStr)
+	require.NoError(t, err, "Open")
+	defer db.Close()
+
+	harness := &athenaHarness{t: t, db: db, table: tableName}
+	defer harness.teardown(ctx)
+	harness.mustExec(ctx, `CREATE TABLE %s ( value string )`, tableName)
+	harness.mustExec(ctx, `INSERT INTO %s VALUES ('foo')`, tableName)
 }
 
 type dummyRow struct {
