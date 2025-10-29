@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"errors"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -48,10 +49,9 @@ func (c *conn) runQuery(ctx context.Context, query string) (driver.Rows, error) 
 	}
 
 	return newRows(ctx, rowsConfig{
-		Athena:  c.athena,
-		QueryID: queryID,
-		// todo add check for ddl queries to not skip header(#10)
-		SkipHeader: true,
+		Athena:     c.athena,
+		QueryID:    queryID,
+		SkipHeader: isDDLQuery(query),
 	})
 }
 
@@ -118,6 +118,14 @@ func (c *conn) Begin() (driver.Tx, error) {
 
 func (c *conn) Close() error {
 	return nil
+}
+
+// supported DDL statements by Athena
+// https://docs.aws.amazon.com/athena/latest/ug/language-reference.html
+var ddlQueryRegex = regexp.MustCompile(`(?i)^(ALTER|CREATE|DESCRIBE|DROP|MSCK|SHOW)`)
+
+func isDDLQuery(query string) bool {
+	return ddlQueryRegex.Match([]byte(query))
 }
 
 var _ driver.QueryerContext = (*conn)(nil)
